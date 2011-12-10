@@ -50,15 +50,16 @@
 }
 // Facebook - https://developers.facebook.com/apps
 // SHKFacebookAppID is the Application ID provided by Facebook
-// SHKFacebookLocalAppID is used if you need to differentiate between several iOS apps running against a single Facebook app. Leave it blank unless you are sure of what you are doing. 
+// SHKFacebookLocalAppID is used if you need to differentiate between several iOS apps running against a single Facebook app. Useful, if you have full and lite versions of the same app,
+// and wish sharing from both will appear on facebook as sharing from one main app. You have to add different suffix to each version. Do not forget to fill both suffixes on facebook developer ("URL Scheme Suffix"). Leave it blank unless you are sure of what you are doing. 
 // The CFBundleURLSchemes in your App-Info.plist should be "fb" + the concatenation of these two IDs.
 // Example: 
 //    SHKFacebookAppID = 555
-//    SHKFacebookLocalAppID = funk
+//    SHKFacebookLocalAppID = lite
 // 
-//    Your CFBundleURLSchemes entry: fb555funk
+//    Your CFBundleURLSchemes entry: fb555lite
 - (NSString*)facebookAppId {
-	return @"";
+	return @"232705466797125";
 }
 
 - (NSString*)facebookLocalAppId {
@@ -166,8 +167,16 @@
 }
 
 - (UIColor*)barTintForView:(UIViewController*)vc {
+    
+    if ([NSStringFromClass([vc class]) isEqualToString:@"SHKTwitterForm"]) 
+        return [UIColor colorWithRed:0 green:151.0f/255 blue:222.0f/255 alpha:1];
+    
+    if ([NSStringFromClass([vc class]) isEqualToString:@"SHKFacebookForm"]) 
+        return [UIColor colorWithRed:59.0f/255 green:89.0f/255 blue:152.0f/255 alpha:1];
+    
     return nil;
 }
+
 // Forms
 - (NSNumber*)formFontColorRed {
 	return [NSNumber numberWithInt:-1];// Value between 0-255, set all to -1 for default
