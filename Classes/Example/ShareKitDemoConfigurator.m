@@ -40,14 +40,13 @@
  leaving that decision up to the user.
  */
 
-// Delicious - https://developer.apps.yahoo.com/dashboard/createKey.html
-- (NSString*)deliciousConsumerKey {
-	return @"";
+
+// Vkontakte
+// SHKVkontakteAppID is the Application ID provided by Vkontakte
+- (NSString*)vkontakteAppId {
+	return @"2706858";
 }
 
-- (NSString*)deliciousSecretKey {
-	return @"";
-}
 // Facebook - https://developers.facebook.com/apps
 // SHKFacebookAppID is the Application ID provided by Facebook
 // SHKFacebookLocalAppID is used if you need to differentiate between several iOS apps running against a single Facebook app. Useful, if you have full and lite versions of the same app,
@@ -137,11 +136,11 @@
  2 - One needs to setup the flickr app as a "web service" on the flickr authentication flow settings, and enter in your app's custom callback URL scheme. 
  3 - make sure you define and create the same URL scheme in your apps info.plist. It can be as simple as yourapp://flickr */
 - (NSString*)flickrConsumerKey {
-    return @"";
+    return @"72f05286417fae8da2d7e779f0eb1b2a";
 }
 
 - (NSString*)flickrSecretKey {
-    return @"";
+    return @"b5e731f395031782";
 }
 // The user defined callback url
 - (NSString*)flickrCallbackUrl{
@@ -155,6 +154,19 @@
 - (NSString*)bitLyKey {
 	return @"R_466f921d62a0789ac6262b7711be8454";
 }
+
+- (NSString*)linkedInConsumerKey {
+	return @"9f8m5vx0yhjf";
+}
+
+- (NSString*)linkedInSecret {
+	return @"UWGKcBWreMKhwzRG";
+}
+
+- (NSString*)linkedInCallbackUrl {
+	return @"http://yourdomain.com/callback";
+}
+
 /*
  UI Configuration : Basic
  ------------------------
@@ -166,12 +178,12 @@
 	return @"UIBarStyleDefault";// See: http://developer.apple.com/iphone/library/documentation/UIKit/Reference/UIKitDataTypesReference/Reference/reference.html#//apple_ref/c/econst/UIBarStyleDefault
 }
 
-- (UIColor*)barTintForView:(UIViewController*)vc {
-    
-    if ([NSStringFromClass([vc class]) isEqualToString:@"SHKTwitterForm"]) 
+- (UIColor*)barTintForView:(UIViewController*)vc {    
+       
+    if ([NSStringFromClass([vc class]) isEqualToString:@"SHKTwitter"]) 
         return [UIColor colorWithRed:0 green:151.0f/255 blue:222.0f/255 alpha:1];
     
-    if ([NSStringFromClass([vc class]) isEqualToString:@"SHKFacebookForm"]) 
+    if ([NSStringFromClass([vc class]) isEqualToString:@"SHKFacebook"]) 
         return [UIColor colorWithRed:59.0f/255 green:89.0f/255 blue:152.0f/255 alpha:1];
     
     return nil;

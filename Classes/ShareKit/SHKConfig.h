@@ -37,10 +37,8 @@
  */
 
 
-
-// Delicious - https://developer.apps.yahoo.com/projects
-#define SHKDeliciousConsumerKey		@""
-#define SHKDeliciousSecretKey		@""
+//Vkontakte
+#define SHKVkontakteAppID				@""
 
 // Facebook - https://developers.facebook.com/
 // SHKFacebookAppID is the Application ID provided by Facebook
@@ -110,6 +108,15 @@
 #define SHKFlickrSecretKey @""		// The secret key
 #define SHKFlickrCallbackUrl @"app://flickr"	// The user defined callback url
 
+
+// LinkedIn - https://developer.linkedin.com/documents/authentication
+#define SHKLinkedInConsumerKey		@""
+#define SHKLinkedInSecret			@""
+#define SHKLinkedInCallbackUrl		@""
+
+// Foursquare V2 - https://developer.foursquare.com
+#define SHKFoursquareV2ClientId @""
+#define SHKFoursquareV2RedirectURI @""
 
 /*
  UI Configuration : Basic

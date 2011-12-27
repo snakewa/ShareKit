@@ -59,14 +59,12 @@
  leaving that decision up to the user.
  */
 
-// Delicious - https://developer.apps.yahoo.com/dashboard/createKey.html
-- (NSString*)deliciousConsumerKey {
+// Vkontakte
+// SHKVkontakteAppID is the Application ID provided by Vkontakte
+- (NSString*)vkontakteAppId {
 	return @"";
 }
 
-- (NSString*)deliciousSecretKey {
-	return @"";
-}
 // Facebook - https://developers.facebook.com/apps
 // SHKFacebookAppID is the Application ID provided by Facebook
 // SHKFacebookLocalAppID is used if you need to differentiate between several iOS apps running against a single Facebook app. Useful, if you have full and lite versions of the same app,
@@ -174,6 +172,29 @@
 - (NSString*)bitLyKey {
 	return @"";
 }
+
+// LinkedIn - https://developer.linkedin.com/documents/authentication
+- (NSString*)linkedInConsumerKey {
+	return @"";
+}
+
+- (NSString*)linkedInSecret {
+	return @"";
+}
+
+- (NSString*)linkedInCallbackUrl {
+	return @"";
+}
+
+// Foursquare V2 - https://developer.foursquare.com
+- (NSString*)foursquareV2ClientId {
+    return @"";
+}
+
+- (NSString*)foursquareV2RedirectURI {
+    return @"";
+}
+
 /*
  UI Configuration : Basic
  ------------------------

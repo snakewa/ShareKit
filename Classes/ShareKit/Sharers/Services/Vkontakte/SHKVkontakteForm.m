@@ -1,14 +1,35 @@
 //
-//  SHKFacebookForm.m
+//  SHKVkontakteForm.m
 //  ShareKit
 //
+//  Created by Alterplay Team on 06.12.11.
+//  Based on https://github.com/maiorov/VKAPI
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
+//
+//
 
-#import "SHKFacebookForm.h"
+#import "SHKVkontakteForm.h"
+#import "SHKVkontakte.h"
 #import "SHK.h"
-#import "SHKFacebook.h"
 
-
-@implementation SHKFacebookForm
+@implementation SHKVkontakteForm
 
 @synthesize delegate;
 @synthesize textView;
@@ -16,23 +37,23 @@
 - (void)dealloc 
 {
 	[textView release];
-    [super dealloc];
+	[super dealloc];
 }
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil 
 {
-    if ((self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil])) 
+	if ((self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil])) 
 	{		
 		self.navigationItem.leftBarButtonItem = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel
-                                                                                               target:self
-                                                                                               action:@selector(cancel)] autorelease];
+																																													 target:self
+																																													 action:@selector(cancel)] autorelease];
 		
-		self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc] initWithTitle:SHKLocalizedString(@"Send to %@", [SHKFacebook sharerTitle]) 
-                                                                                   style:UIBarButtonItemStyleDone
-                                                                                  target:self
-                                                                                  action:@selector(save)] autorelease];
-    }
-    return self;
+		self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc] initWithTitle:SHKLocalizedString(@"Send to %@", [SHKVkontakte sharerTitle]) 
+																																							 style:UIBarButtonItemStyleDone
+																																							target:self
+																																							action:@selector(save)] autorelease];
+	}
+	return self;
 }
 
 - (void)loadView 
@@ -76,7 +97,7 @@
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation 
 {
-    return YES;
+	return YES;
 }
 
 //#pragma GCC diagnostic push
@@ -99,7 +120,7 @@
 	 // < 3.2
 	 else 
 	 {*/
-
+	
 	[[notification.userInfo valueForKey:UIKeyboardBoundsUserInfoKey] getValue:&keyboardFrame];
 	keyboardHeight = keyboardFrame.size.height;
 	//}
@@ -127,22 +148,22 @@
 - (void)cancel
 {	
 	[[SHK currentHelper] hideCurrentViewControllerAnimated:YES];
-	[(SHKFacebook *)delegate sendDidCancel];
+	[(SHKVkontakte *)delegate sendDidCancel];
 }
 
 - (void)save
 {	
-    if (textView.text.length == 0)
+	if (textView.text.length == 0)
 	{
 		[[[[UIAlertView alloc] initWithTitle:SHKLocalizedString(@"Message is empty")
-									 message:SHKLocalizedString(@"You must enter a message in order to post.")
-									delegate:nil
-						   cancelButtonTitle:SHKLocalizedString(@"Close")
-						   otherButtonTitles:nil] autorelease] show];
+																 message:SHKLocalizedString(@"You must enter a message in order to post.")
+																delegate:nil
+											 cancelButtonTitle:SHKLocalizedString(@"Close")
+											 otherButtonTitles:nil] autorelease] show];
 		return;
 	}
 	
-	[(SHKFacebook *)delegate sendForm:self];
+	[(SHKVkontakte *)delegate sendForm:self];
 	
 	[[SHK currentHelper] hideCurrentViewControllerAnimated:YES];
 }

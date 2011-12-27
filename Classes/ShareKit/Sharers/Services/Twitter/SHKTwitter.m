@@ -43,6 +43,7 @@ static NSString *const kSHKTwitterUserInfo=@"kSHKTwitterUserInfo";
 - (BOOL)validateItemAfterUserEdit;
 - (void)handleUnsuccessfulTicket:(NSData *)data;
 - (void)convertNSNullsToEmptyStrings:(NSMutableDictionary *)dict;
+- (BOOL)twitterFrameworkAvailable;
 
 @end
 
@@ -117,9 +118,10 @@ static NSString *const kSHKTwitterUserInfo=@"kSHKTwitterUserInfo";
 
 - (void)share {
     
-    if (NSClassFromString(@"TWTweetComposeViewController")) {
+    if ([self twitterFrameworkAvailable]) {
         
         [SHKiOS5Twitter shareItem:self.item];
+        [SHKTwitter logout];//to clean credentials - we will not need them anymore
         return;
     }
     
@@ -132,6 +134,17 @@ static NSString *const kSHKTwitterUserInfo=@"kSHKTwitterUserInfo";
 }
 
 #pragma mark -
+
+- (BOOL)twitterFrameworkAvailable {
+    
+    BOOL result = NO;
+    
+    if (NSClassFromString(@"TWTweetComposeViewController")) {
+        result = YES;
+    }
+    
+    return result;
+}
 
 - (BOOL)prepareItem {
     
@@ -162,11 +175,20 @@ static NSString *const kSHKTwitterUserInfo=@"kSHKTwitterUserInfo";
 
 - (BOOL)isAuthorized
 {		
+    if ([self twitterFrameworkAvailable]) {
+        [SHKTwitter logout];
+        return NO; 
+    }
 	return [self restoreAccessToken];
 }
 
 - (void)promptAuthorization
-{		
+{	
+    if ([self twitterFrameworkAvailable]) {
+    SHKLog(@"There is no need to authorize when we use iOS Twitter framework");
+    return;
+    }
+	
 	if (xAuth)
 		[super authorizationFormShow]; // xAuth process
 	
@@ -278,15 +300,14 @@ static NSString *const kSHKTwitterUserInfo=@"kSHKTwitterUserInfo";
 
 - (void)showTwitterForm
 {
-	SHKTwitterForm *rootView = [[SHKTwitterForm alloc] initWithNibName:nil bundle:nil];	
-	rootView.delegate = self;
+	SHKTwitterForm *rootView = [[SHKTwitterForm alloc] initWithNibName:nil bundle:nil delegate:self];	
 	
 	// force view to load so we can set textView text
 	[rootView view];
 	
 	rootView.textView.text = [item customValueForKey:@"status"];
 	rootView.hasAttachment = item.image != nil;
-    self.navigationBar.tintColor = SHKCONFIG_WITH_ARGUMENT(barTintForView:,rootView);
+    self.navigationBar.tintColor = SHKCONFIG_WITH_ARGUMENT(barTintForView:,self);
 	
 	[self pushViewController:rootView animated:NO];
     [rootView release];
@@ -439,7 +460,7 @@ static NSString *const kSHKTwitterUserInfo=@"kSHKTwitterUserInfo";
         
         NSError *error = nil;
         NSMutableDictionary *userInfo;
-        if ([NSJSONSerialization class]) {
+        if (NSClassFromString(@"NSJSONSerialization")) {
             userInfo = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
         } else {
             userInfo = [[JSONDecoder decoder] mutableObjectWithData:data error:&error];

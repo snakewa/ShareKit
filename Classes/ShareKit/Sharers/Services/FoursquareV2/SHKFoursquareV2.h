@@ -1,9 +1,9 @@
 //
-//  SHKDelicious.h
+//  SHKFoursquareV2.h
 //  ShareKit
 //
-//  Created by Nathan Weiner on 6/21/10.
-
+//  Created by Robin Hos (Everdune) on 9/26/11.
+//  Sponsored by Twoppy
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -24,18 +24,44 @@
 //  THE SOFTWARE.
 //
 //
+//  Notes: 
+//
+//  1) This sharer assumes SBJSON is present (this will automatically be the
+//     case if the Facebook sharer is included 
+//
+//  2) The sharer needs the location services which are not available in the simulator
+//     (it will show up on a real device)
+//
+//
 
-#import <Foundation/Foundation.h>
-#import "SHKOAuthSharer.h"
+#import "SHKSharer.h"
 
-@interface SHKDelicious : SHKOAuthSharer 
-{
+#import "SHKFoursquareV2Request.h"
+#import "SHKFoursquareV2Venue.h"
 
+@interface SHKFoursquareV2 : SHKSharer {
+    NSString *_clientId;
+    NSURL *_authorizeCallbackURL;
+    
+    NSString *_accessToken;
+    
+    CLLocation *_location;
+    SHKFoursquareV2Venue *_venue;
 }
 
-- (BOOL)handleResponse:(SHKRequest *)aRequest;
+@property (nonatomic, copy) NSString *clientId;
+@property (nonatomic, copy) NSURL *authorizeCallbackURL;
 
-- (void)sendTicket:(OAServiceTicket *)ticket didFinishWithData:(NSData *)data;
-- (void)sendTicket:(OAServiceTicket *)ticket didFailWithError:(NSError*)error;
+@property (nonatomic, copy) NSString *accessToken;
+
+@property (nonatomic, retain) CLLocation *location;
+@property (nonatomic, retain) SHKFoursquareV2Venue *venue;
+
+
+- (void)showFoursquareV2VenuesForm;
+- (void)showFoursquareV2CheckInForm;
+
+- (void)startCheckInRequest;
+- (void)finishCheckInRequest:(SHKFoursquareV2Request*)sender;
 
 @end
