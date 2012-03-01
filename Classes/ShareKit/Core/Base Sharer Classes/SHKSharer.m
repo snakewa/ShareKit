@@ -28,16 +28,17 @@
 #import "SHKSharer.h"
 #import "SHKActivityIndicator.h"
 #import "SHKConfiguration.h"
+#import "SHKSharerDelegate.h"
 
-@interface SHKSharer () 
+@interface SHKSharer ()
 
-@property (nonatomic) BOOL isRetainingSelf;
+- (void)updateItemWithForm:(SHKFormController *)form;
 
 @end
 
 @implementation SHKSharer
 
-@synthesize shareDelegate, isRetainingSelf;
+@synthesize shareDelegate;
 @synthesize item, pendingForm, request;
 @synthesize lastError;
 @synthesize quiet, pendingAction;
@@ -45,7 +46,7 @@
 - (void)dealloc
 {
 	[item release];
-	shareDelegate = nil;
+    [shareDelegate release];
 	[pendingForm release];
 	[request release];
 	[lastError release];
@@ -175,8 +176,7 @@
 {
 	if (self = [super initWithNibName:nil bundle:nil])
 	{
-		self.shareDelegate = self;
-        isRetainingSelf = NO;
+		self.shareDelegate = [[[SHKSharerDelegate alloc] init] autorelease];
 		self.item = [[[SHKItem alloc] init] autorelease];
 				
 		if ([self respondsToSelector:@selector(modalPresentationStyle)])
@@ -293,13 +293,6 @@
 
 - (void)share
 {
-    if (![self validateItem]) {
-        return; //otherwise self would stay retained forever. 
-    }
-	if (self.shareDelegate == self) {	// if no one has set the delegate away from us, we need to live till the end of sharing.
-		[self retain];
-        self.isRetainingSelf = YES;
-	}
 	// isAuthorized - If service requires login and details have not been saved, present login dialog	
 	if (![self authorize])
 		self.pendingAction = SHKPendingShare;
@@ -372,7 +365,7 @@
 
 - (void)setShouldAutoShare:(BOOL)b
 {
-	return [[NSUserDefaults standardUserDefaults] setBool:b forKey:[NSString stringWithFormat:@"%@_shouldAutoShare", [self sharerId]]];
+	[[NSUserDefaults standardUserDefaults] setBool:b forKey:[NSString stringWithFormat:@"%@_shouldAutoShare", [self sharerId]]];
 }
 
 #pragma mark Authorization Form
@@ -388,8 +381,10 @@
 	form.cancelSelector = @selector(authorizationFormCancel:);
 	form.autoSelect = YES;
 	
-	[[SHK currentHelper] showViewController:form];
-	[form release];
+    [self pushViewController:form animated:NO];
+    [form release];
+    
+	[[SHK currentHelper] showViewController:self];
 }
 
 - (void)authorizationFormValidate:(SHKFormController *)form
@@ -428,7 +423,7 @@
 	}	
 		
 	// -- Try to share again
-	[self share];
+	[self tryPendingAction];
 }
 
 - (void)authorizationFormCancel:(SHKFormController *)form
@@ -523,9 +518,6 @@
 	}
 }
 
-
-
-
 #pragma mark -
 #pragma mark Share Form
 
@@ -566,22 +558,7 @@
 
 - (void)shareFormSave:(SHKFormController *)form
 {		
-	// Update item with new values from form
-	NSDictionary *formValues = [form formValues];
-	for(NSString *key in formValues)
-	{
-		if ([key isEqualToString:@"title"])
-			item.title = [formValues objectForKey:key];
-		
-		else if ([key isEqualToString:@"text"])
-			item.text = [formValues objectForKey:key];
-		
-		else if ([key isEqualToString:@"tags"])
-			item.tags = [formValues objectForKey:key];
-		
-		else
-			[item setCustomValue:[formValues objectForKey:key] forKey:key];
-	}
+    [self updateItemWithForm:form];
 	
 	// Update shouldAutoShare
 	if ([SHKCONFIG(allowAutoShare) boolValue] == TRUE && [[self class] canAutoShare])
@@ -598,6 +575,28 @@
 - (void)shareFormCancel:(SHKFormController *)form
 {
 	[self sendDidCancel];
+}
+
+#pragma mark -
+
+- (void)updateItemWithForm:(SHKFormController *)form
+{
+	// Update item with new values from form
+    NSDictionary *formValues = [form formValues];
+	for(NSString *key in formValues)
+	{
+		if ([key isEqualToString:@"title"])
+			item.title = [formValues objectForKey:key];
+		
+		else if ([key isEqualToString:@"text"])
+			item.text = [formValues objectForKey:key];
+		
+		else if ([key isEqualToString:@"tags"])
+			item.tags = [formValues objectForKey:key];
+		
+		else
+			[item setCustomValue:[formValues objectForKey:key] forKey:key];
+	}
 }
 
 #pragma mark -
@@ -665,88 +664,33 @@
 }
 
 #pragma mark -
-#pragma mark Default UI Updating
-
-// These are used if you do not provide your own custom UI and delegate
-
-
-- (void)sharerStartedSending:(SHKSharer *)sharer
-{
-	if (!quiet)
-		[[SHKActivityIndicator currentIndicator] displayActivity:SHKLocalizedString(@"Saving to %@", [[self class] sharerTitle])];
-}
-
-- (void)sharerFinishedSending:(SHKSharer *)sharer
-{
-	if (!quiet)
-		[[SHKActivityIndicator currentIndicator] displayCompleted:SHKLocalizedString(@"Saved!")];
-	if(self.isRetainingSelf)
-		[self release];	// see share
-}
-
-- (void)sharer:(SHKSharer *)sharer failedWithError:(NSError *)error shouldRelogin:(BOOL)shouldRelogin
-{
-	if (!quiet)
-	{
-		[[SHKActivityIndicator currentIndicator] hide];
-		
-		[[[[UIAlertView alloc] initWithTitle:SHKLocalizedString(@"Error")
-									 message:sharer.lastError!=nil?[sharer.lastError localizedDescription]:SHKLocalizedString(@"There was an error while sharing")
-									delegate:nil
-						   cancelButtonTitle:SHKLocalizedString(@"Close")
-						   otherButtonTitles:nil] autorelease] show];
-		
-		if (shouldRelogin)
-			[self promptAuthorization];
-	}
-	if (self.isRetainingSelf && !shouldRelogin) {
-		[self release];	// see share
-	}
-}
-
-- (void)sharerCancelledSending:(SHKSharer *)sharer
-{
-	if(self.isRetainingSelf)
-		[self release];	// see share
-}
-
-- (void)sharerAuthDidFinish:(SHKSharer *)sharer success:(BOOL)success
-{
-	if (success) {
-        //this saves info about user such as username for services, which do not store username in keychain e.g. facebook and twitter.
-        NSString *userInfoKeyForSharer = [NSString stringWithFormat:@"kSHK%@UserInfo", [sharer title]];
-        NSDictionary *savedUserInfo = [[NSUserDefaults standardUserDefaults] objectForKey:userInfoKeyForSharer];
-        if ([[sharer class] canGetUserInfo] && !savedUserInfo) {
-            [[sharer class] getUserInfo];
-        }
-    }
-    
-    //if there is success we do not need to release, as we are going to share subsequently, and release after share is finished.
-    //if there is no success we need to release, as we do not continue sharing.
-    //if we authorize from outside of ShareKit we do not retain - so we do not need to release.
-    if (!success && self.isRetainingSelf) {
-        [self release]; //see share
-    }
-
-}
-
-#pragma mark -
 #pragma mark Pending Actions
 
 - (void)tryPendingAction
 {
 	switch (pendingAction) 
 	{
-		case SHKPendingShare:
+		case SHKPendingRefreshToken:
+        case SHKPendingSend:    
+			
+            //resend silently
+            [self tryToSend];
+            
+            //to show alert if reshare finishes with error (see SHKSharerDelegate)
+            self.pendingAction = SHKPendingNone;            
+            break;        
+        case SHKPendingShare:
+                    
+            //show UI or autoshare
 			[self share];
+            
+            //to show alert if reshare finishes with error (see SHKSharerDelegate)
+            self.pendingAction = SHKPendingNone;
 			break;
 		default:
 			break;
-
 	}
 }
-
-
 
 #pragma mark -
 
@@ -771,20 +715,32 @@
 {		
     [[NSNotificationCenter defaultCenter] postNotificationName:@"SHKSendDidStartNotification" object:self];
     
-	if ([shareDelegate respondsToSelector:@selector(sharerStartedSending:)])
-		[shareDelegate performSelector:@selector(sharerStartedSending:) withObject:self];	
+	if ([self.shareDelegate respondsToSelector:@selector(sharerStartedSending:)])
+		[self.shareDelegate performSelector:@selector(sharerStartedSending:) withObject:self];	
 }
 
 - (void)sendDidFinish
 {	
 	[[NSNotificationCenter defaultCenter] postNotificationName:@"SHKSendDidFinish" object:self];
 
-    if ([shareDelegate respondsToSelector:@selector(sharerFinishedSending:)])
-		[shareDelegate performSelector:@selector(sharerFinishedSending:) withObject:self];
+    if ([self.shareDelegate respondsToSelector:@selector(sharerFinishedSending:)])
+		[self.shareDelegate performSelector:@selector(sharerFinishedSending:) withObject:self];
 	}
 
-- (void)sendDidFailShouldRelogin
+- (void)shouldReloginWithPendingAction:(SHKSharerPendingAction)action
 {
+    
+    if (action == SHKPendingShare) {
+        
+        if (curOptionController) {
+            [self popViewControllerAnimated:NO];//dismiss option controller
+            curOptionController = nil;
+            NSAssert([[self topViewController] class] == [SHKCustomFormController class], @"topViewController must be SHKCustomFormController now!");
+            [self updateItemWithForm:(SHKFormController *)self.topViewController];
+        }        
+    }
+    
+    self.pendingAction = action;
 	[self sendDidFailWithError:[SHK error:SHKLocalizedString(@"Could not authenticate you. Please relogin.")] shouldRelogin:YES];
 }
 
@@ -799,24 +755,24 @@
 	
 	[[NSNotificationCenter defaultCenter] postNotificationName:@"SHKSendDidFailWithError" object:self];
     
-	if ([shareDelegate respondsToSelector:@selector(sharer:failedWithError:shouldRelogin:)])
-		[(SHKSharer *)shareDelegate sharer:self failedWithError:error shouldRelogin:shouldRelogin];
+	if ([self.shareDelegate respondsToSelector:@selector(sharer:failedWithError:shouldRelogin:)])
+		[self.shareDelegate sharer:self failedWithError:error shouldRelogin:shouldRelogin];
 }
 
 - (void)sendDidCancel
 {
 	[[NSNotificationCenter defaultCenter] postNotificationName:@"SHKSendDidCancel" object:self];
     
-    if ([shareDelegate respondsToSelector:@selector(sharerCancelledSending:)])
-		[shareDelegate performSelector:@selector(sharerCancelledSending:) withObject:self];	
+    if ([self.shareDelegate respondsToSelector:@selector(sharerCancelledSending:)])
+		[self.shareDelegate performSelector:@selector(sharerCancelledSending:) withObject:self];	
 }
 
 - (void)authDidFinish:(BOOL)success	
 {
 	[[NSNotificationCenter defaultCenter] postNotificationName:@"SHKAuthDidFinish" object:self userInfo:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:success] forKey:@"success"]];  
     
-    if ([shareDelegate respondsToSelector:@selector(sharerAuthDidFinish:success:)]) {		
-        [shareDelegate sharerAuthDidFinish:self success:success];
+    if ([self.shareDelegate respondsToSelector:@selector(sharerAuthDidFinish:success:)]) {		
+        [self.shareDelegate sharerAuthDidFinish:self success:success];
     }
 }
 

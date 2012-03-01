@@ -39,7 +39,8 @@
 
 - (void)dealloc
 {
-	[url release];
+	[delegate release];
+    [url release];
 	[params release];
 	[method release];
 	[headerFields release];
@@ -68,7 +69,6 @@
 	
 	return self;
 }
-
 
 #pragma mark -
 
@@ -138,8 +138,9 @@
 {
 	self.success = (response.statusCode == 200 || response.statusCode == 201);
 	
-	if ([delegate respondsToSelector:isFinishedSelector])
-		[delegate performSelector:isFinishedSelector withObject:self];
+	if ([self.delegate respondsToSelector:isFinishedSelector])
+		[self.delegate performSelector:isFinishedSelector withObject:self];
+    self.delegate = nil;
 }
 
 - (NSString *)getResult
@@ -149,5 +150,13 @@
 	return result;
 }
 
+#pragma mark -
+
+- (NSString *)description {
+    
+    NSString *functionResult = [NSString stringWithFormat:@"method: %@\nurl: %@\nparams: %@\nresponse: %i (%@)\ndata: %@", self.method, [self.url absoluteString], self.params, [self.response statusCode], [NSHTTPURLResponse localizedStringForStatusCode:[self.response statusCode]], [[[NSString alloc] initWithData:self.data encoding:NSUTF8StringEncoding] autorelease]];
+    
+    return functionResult;    
+}
 
 @end

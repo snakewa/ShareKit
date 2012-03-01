@@ -123,7 +123,7 @@
 	return @"";
 }
 // Evernote - http://www.evernote.com/about/developer/api/
-/*	You need to set to sandbox until you get approved by evernote
+/*	You need to set to sandbox until you get approved by evernote. If you use sandbox, you can use it with special sandbox user account only. You can create it here: https://sandbox.evernote.com/Registration.action
  // Sandbox
  #define SHKEvernoteUserStoreURL    @"https://sandbox.evernote.com/edam/user"
  #define SHKEvernoteNetStoreURLBase @"http://sandbox.evernote.com/edam/note/"
@@ -173,7 +173,7 @@
 	return @"";
 }
 
-// LinkedIn - https://developer.linkedin.com/documents/authentication
+// LinkedIn - https://www.linkedin.com/secure/developer
 - (NSString*)linkedInConsumerKey {
 	return @"";
 }
@@ -254,6 +254,29 @@
 - (NSString*)sharersPlistName {
 	return @"SHKSharers.plist";
 }
+// SHKActionSheet settings
+- (NSNumber*)showActionSheetMoreButton {
+	return [NSNumber numberWithBool:true];// Setting this to true will show More... button in SHKActionSheet, setting to false will leave the button out.
+}
+
+/*
+ Favorite Sharers
+ ----------------
+ These values are used to define the default favorite sharers appearing on ShareKit's action sheet.
+ */
+- (NSArray*)defaultFavoriteURLSharers {
+    return [NSArray arrayWithObjects:@"SHKTwitter",@"SHKFacebook",@"SHKReadItLater",@"SHKVkontakte", nil];
+}
+- (NSArray*)defaultFavoriteImageSharers {
+    return [NSArray arrayWithObjects:@"SHKMail",@"SHKFacebook", @"SHKCopy",@"SHKVkontakte", nil];
+}
+- (NSArray*)defaultFavoriteTextSharers {
+    return [NSArray arrayWithObjects:@"SHKMail",@"SHKTwitter",@"SHKFacebook",@"SHKVkontakte", @"SHKLinkedIn", nil];
+}
+- (NSArray*)defaultFavoriteFileSharers {
+    return [NSArray arrayWithObjects:@"SHKMail",@"SHKEvernote", nil];
+}
+
 /*
  UI Configuration : Advanced
  ---------------------------

@@ -232,7 +232,7 @@ static NSString * const kStoredAuthPasswordKeyName = @"password";
         }
         else if([item shareType] == SHKShareTypeImage){
             
-            NSData *imageData = UIImageJPEGRepresentation([item image], 0.9);
+			NSData *imageData = [self generateImageData];
             NSMutableURLRequest *aRequest = [[[NSMutableURLRequest alloc] init] autorelease];
             [aRequest setURL:[NSURL URLWithString:kTumblrWriteURL]];
             [aRequest setHTTPMethod:@"POST"];
@@ -332,7 +332,7 @@ static NSString * const kStoredAuthPasswordKeyName = @"password";
 - (void)sendFinished:(SHKRequest *)aRequest{
 	if (!aRequest.success) {
 		if (aRequest.response.statusCode == 403) {
-			[self sendDidFailWithError:[SHK error:SHKLocalizedString(@"Invalid email or password.")] shouldRelogin:YES];
+            [self shouldReloginWithPendingAction:SHKPendingSend];
 			return;
 		}
         else if (aRequest.response.statusCode == 500) {
@@ -345,6 +345,11 @@ static NSString * const kStoredAuthPasswordKeyName = @"password";
 	}
     
 	[self sendDidFinish];
+}
+
+- (NSData*) generateImageData
+{
+	return UIImageJPEGRepresentation(item.image, .9);
 }
 
 #pragma mark -

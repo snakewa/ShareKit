@@ -27,7 +27,7 @@
 #import "SHKConfiguration.h"
 #import "SHKLinkedIn.h"
 #import "SHKLinkedInOAMutableURLRequest.h"
-#import "SHKLinkedInTextForm.h"
+#import "SHKXMLResponseParser.h"
 
 NSString *SHKLinkedInVisibilityCodeKey = @"visibility.code";
 
@@ -151,19 +151,10 @@ NSString *SHKLinkedInVisibilityCodeKey = @"visibility.code";
 }
 
 
-// If you need to add additional headers or parameters to the request_token request, uncomment this section:
-/*
- - (void)tokenRequestModifyRequest:(OAMutableURLRequest *)oRequest
- {
- // Here is an example that adds the user's callback to the request headers
- [oRequest setOAuthParameterName:@"oauth_callback" withValue:authorizeCallbackURL.absoluteString];
- }
- */
-
-
 // If you need to add additional headers or parameters to the access_token request, uncomment this section:
 - (void)tokenAccessModifyRequest:(OAMutableURLRequest *)oRequest
 {
+	SHKLog(@"req: %@", authorizeResponseQueryVars);
   // Here is an example that adds the oauth_verifier value received from the authorize call.
   // authorizeResponseQueryVars is a dictionary that contains the variables sent to the callback url
   [oRequest setOAuthParameterName:@"oauth_verifier" withValue:[authorizeResponseQueryVars objectForKey:@"oauth_verifier"]];
@@ -173,21 +164,23 @@ NSString *SHKLinkedInVisibilityCodeKey = @"visibility.code";
 #pragma mark -
 #pragma mark Share Form
 
-- (void)showLinkedInTextForm
+- (void)showSHKTextForm
 {
-	SHKLinkedInTextForm *rootView = [[SHKLinkedInTextForm alloc] initWithNibName:nil bundle:nil];	
-	rootView.delegate = self;
-	
-	// force view to load so we can set textView text
-	[rootView view];
+	SHKFormControllerLargeTextField *rootView = [[SHKFormControllerLargeTextField alloc] initWithNibName:nil bundle:nil delegate:self];	
 	
     if (item.shareType == SHKShareTypeURL) {
-        rootView.textView.text = item.title;
+        rootView.text = item.title;
+        rootView.hasLink = YES;
+        
     } else {
-        rootView.textView.text = item.text;
+        rootView.text = item.text;
     }
+    
+    rootView.maxTextLength = 700;  
+    self.navigationBar.tintColor = SHKCONFIG_WITH_ARGUMENT(barTintForView:,self);
 	
 	[self pushViewController:rootView animated:NO];
+    [rootView release];
 	
 	[[SHK currentHelper] showViewController:self];	
 }
@@ -196,20 +189,9 @@ NSString *SHKLinkedInVisibilityCodeKey = @"visibility.code";
 {
     if (item.shareType == SHKShareTypeText || item.shareType == SHKShareTypeURL)
 	{
-		[self showLinkedInTextForm];
+		[self showSHKTextForm];
 	}
 }
-
-- (void)sendTextForm:(SHKLinkedInTextForm *)form
-{	
-    if (item.shareType == SHKShareTypeURL) {
-        item.title = form.textView.text;
-    } else {
-        item.text = form.textView.text;
-    }
-	[self tryToSend];
-}
-
 
 // If you have a share form the user will have the option to skip it in the future.
 // If your form has required information and should never be skipped, uncomment this section.
@@ -218,6 +200,18 @@ NSString *SHKLinkedInVisibilityCodeKey = @"visibility.code";
     return NO;
 }
 
+#pragma mark -
+#pragma mark SHKFormControllerLargeTextField delegate
+
+- (void)sendForm:(SHKFormControllerLargeTextField *)form
+{	
+    if (item.shareType == SHKShareTypeURL) {
+        item.title = form.textView.text;
+    } else {
+        item.text = form.textView.text;
+    }
+	[self tryToSend];
+}
 
 #pragma mark -
 #pragma mark Implementation
@@ -319,16 +313,27 @@ NSString *SHKLinkedInVisibilityCodeKey = @"visibility.code";
     
     else 
     {
+        
+#ifdef _SHKDebugShowLogs
+        NSString *responseBody = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
+#endif
+        SHKLog(@"%@", responseBody);
+        
         // Handle the error
         
         // If the error was the result of the user no longer being authenticated, you can reprompt
         // for the login information with:
-        // [self sendDidFailShouldRelogin];
+        NSString *errorCode = [SHKXMLResponseParser getValueForElement:@"status" fromResponse:data];
         
-        // Otherwise, all other errors should end with:
-        NSString *responseBody = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
-        NSLog(@"%@", responseBody);
-        [self sendDidFailWithError:[SHK error:@"Why it failed"] shouldRelogin:NO];
+        if ([errorCode isEqualToString:@"401"]) {
+            
+            [self shouldReloginWithPendingAction:SHKPendingSend];
+            
+        } else {
+            
+            // Otherwise, all other errors should end with:            
+            [self sendDidFailWithError:[SHK error:SHKLocalizedString(@"The service encountered an error. Please try again later.")] shouldRelogin:NO]; 
+        }
     }
 }
 

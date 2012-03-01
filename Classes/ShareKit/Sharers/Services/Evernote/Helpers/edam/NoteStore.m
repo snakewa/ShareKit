@@ -14,7 +14,7 @@
 #import "UserStore.h"
 #import "Types.h"
 #import "Errors.h"
-#import "Limits.h"
+#import <limits.h>
 
 #import "NoteStore.h"
 
@@ -31587,9 +31587,11 @@
 
 - (id) initWithInProtocol: (id <TProtocol>) anInProtocol outProtocol: (id <TProtocol>) anOutProtocol
 {
-  [super init];
-  inProtocol = [anInProtocol retain];
-  outProtocol = [anOutProtocol retain];
+  self = [super init];
+  if (self) {
+      inProtocol = [anInProtocol retain];
+      outProtocol = [anOutProtocol retain];
+  }  
   return self;
 }
 
